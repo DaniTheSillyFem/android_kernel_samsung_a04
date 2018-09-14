@@ -43,6 +43,7 @@ struct ctl_table_header;
 struct net_generic;
 struct uevent_sock;
 struct netns_ipvs;
+struct bpf_prog;
 
 struct bpf_prog;
 

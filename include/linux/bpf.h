@@ -339,6 +339,7 @@ enum bpf_cgroup_storage_type {
 	BPF_CGROUP_STORAGE_PERCPU,
 	__BPF_CGROUP_STORAGE_MAX
 };
+
 #define MAX_BPF_CGROUP_STORAGE_TYPE __BPF_CGROUP_STORAGE_MAX
 
 struct bpf_prog_aux {

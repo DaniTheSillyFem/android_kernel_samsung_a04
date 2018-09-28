@@ -181,6 +181,7 @@ int bpf_percpu_cgroup_storage_copy(struct bpf_map *_map, void *_key,
 		rcu_read_unlock();
 		return -ENOENT;
 	}
+
 	/* per_cpu areas are zero-filled and bpf programs can only
 	 * access 'value_size' of them, so copying rounded areas
 	 * will not leak any kernel data
@@ -211,6 +212,8 @@ int bpf_percpu_cgroup_storage_update(struct bpf_map *_map, void *_key,
 		rcu_read_unlock();
 		return -ENOENT;
 	}
+
+
 	/* the user space will provide round_up(value_size, 8) bytes that
 	 * will be copied into per-cpu area. bpf programs can only access
 	 * value_size of it. During lookup the same extra bytes will be
@@ -447,6 +450,7 @@ void bpf_cgroup_storage_release(struct bpf_prog *prog, struct bpf_map *_map)
 static size_t bpf_cgroup_storage_calculate_size(struct bpf_map *map, u32 *pages)
 {
 	size_t size;
+
 	if (cgroup_storage_type(map) == BPF_CGROUP_STORAGE_SHARED) {
 		size = sizeof(struct bpf_storage_buffer) + map->value_size;
 		*pages = round_up(sizeof(struct bpf_cgroup_storage) + size,
@@ -496,6 +500,7 @@ struct bpf_cgroup_storage *bpf_cgroup_storage_alloc(struct bpf_prog *prog,
 	storage->map = (struct bpf_cgroup_storage_map *)map;
 
 	return storage;
+
 enomem:
 	bpf_map_uncharge_memlock(map, pages);
 	kfree(storage);
@@ -506,6 +511,7 @@ static void free_shared_cgroup_storage_rcu(struct rcu_head *rcu)
 {
 	struct bpf_cgroup_storage *storage =
 		container_of(rcu, struct bpf_cgroup_storage, rcu);
+
 	kfree(storage->buf);
 	kfree(storage);
 }
@@ -514,6 +520,7 @@ static void free_percpu_cgroup_storage_rcu(struct rcu_head *rcu)
 {
 	struct bpf_cgroup_storage *storage =
 		container_of(rcu, struct bpf_cgroup_storage, rcu);
+
 	free_percpu(storage->percpu_buf);
 	kfree(storage);
 }

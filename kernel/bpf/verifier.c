@@ -4720,8 +4720,12 @@ static void reg_combine_min_max(struct bpf_reg_state *true_src,
 	}
 }
 
+<<<<<<< HEAD
 static void mark_ptr_or_null_reg(struct bpf_func_state *state,
 				 struct bpf_reg_state *reg, u32 id,
+=======
+static void mark_ptr_or_null_reg(struct bpf_reg_state *reg, u32 id,
+>>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 				 bool is_null)
 {
 	if (reg_type_may_be_null(reg->type) && reg->id == id) {
@@ -4744,6 +4748,7 @@ static void mark_ptr_or_null_reg(struct bpf_func_state *state,
 			} else {
 				reg->type = PTR_TO_MAP_VALUE;
 			}
+<<<<<<< HEAD
 		} else if (reg->type == PTR_TO_SOCKET_OR_NULL) {
 			reg->type = PTR_TO_SOCKET;
 		} else if (reg->type == PTR_TO_SOCK_COMMON_OR_NULL) {
@@ -4759,6 +4764,8 @@ static void mark_ptr_or_null_reg(struct bpf_func_state *state,
 			 * pruning has chances to take effect.
 			 */
 			reg->id = 0;
+=======
+>>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 		}
 	}
 }
@@ -4778,14 +4785,22 @@ static void mark_ptr_or_null_regs(struct bpf_verifier_state *vstate, u32 regno,
 		release_reference_state(state, id);
 
 	for (i = 0; i < MAX_BPF_REG; i++)
+<<<<<<< HEAD
 		mark_ptr_or_null_reg(state, &regs[i], id, is_null);
+=======
+		mark_ptr_or_null_reg(&regs[i], id, is_null);
+>>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 
 	for (j = 0; j <= vstate->curframe; j++) {
 		state = vstate->frame[j];
 		bpf_for_each_spilled_reg(i, state, reg) {
 			if (!reg)
 				continue;
+<<<<<<< HEAD
 			mark_ptr_or_null_reg(state, reg, id, is_null);
+=======
+			mark_ptr_or_null_reg(reg, id, is_null);
+>>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 		}
 	}
 }

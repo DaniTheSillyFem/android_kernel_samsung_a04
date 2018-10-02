@@ -101,8 +101,8 @@ static const struct bpf_verifier_ops * const bpf_verifier_ops[] = {
  * (like pointer plus pointer becomes SCALAR_VALUE type)
  *
  * When verifier sees load or store instructions the type of base register
- * can be: PTR_TO_MAP_VALUE, PTR_TO_CTX, PTR_TO_STACK. These are three pointer
- * types recognized by check_mem_access() function.
+ * can be: PTR_TO_MAP_VALUE, PTR_TO_CTX, PTR_TO_STACK, PTR_TO_SOCKET. These are
+ * four pointer types recognized by check_mem_access() function.
  *
  * PTR_TO_MAP_VALUE means that this register is pointing to 'map element value'
  * and the range of [ptr, ptr + map's value_size) is accessible.
@@ -2059,6 +2059,14 @@ static int check_mem_access(struct bpf_verifier_env *env, int insn_idx, u32 regn
 
 		err = check_flow_keys_access(env, off, size);
 		if (!err && t == BPF_READ && value_regno >= 0)
+			mark_reg_unknown(env, regs, value_regno);
+	} else if (reg->type == PTR_TO_SOCKET) {
+		if (t == BPF_WRITE) {
+			verbose(env, "cannot write into socket\n");
+			return -EACCES;
+		}
+		err = check_sock_access(env, regno, off, size, t);
+		if (!err && value_regno >= 0)
 			mark_reg_unknown(env, regs, value_regno);
 	} else {
 		return -EACCES;
@@ -4720,12 +4728,8 @@ static void reg_combine_min_max(struct bpf_reg_state *true_src,
 	}
 }
 
-<<<<<<< HEAD
 static void mark_ptr_or_null_reg(struct bpf_func_state *state,
 				 struct bpf_reg_state *reg, u32 id,
-=======
-static void mark_ptr_or_null_reg(struct bpf_reg_state *reg, u32 id,
->>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 				 bool is_null)
 {
 	if (reg_type_may_be_null(reg->type) && reg->id == id) {
@@ -4748,7 +4752,6 @@ static void mark_ptr_or_null_reg(struct bpf_reg_state *reg, u32 id,
 			} else {
 				reg->type = PTR_TO_MAP_VALUE;
 			}
-<<<<<<< HEAD
 		} else if (reg->type == PTR_TO_SOCKET_OR_NULL) {
 			reg->type = PTR_TO_SOCKET;
 		} else if (reg->type == PTR_TO_SOCK_COMMON_OR_NULL) {
@@ -4764,8 +4767,6 @@ static void mark_ptr_or_null_reg(struct bpf_reg_state *reg, u32 id,
 			 * pruning has chances to take effect.
 			 */
 			reg->id = 0;
-=======
->>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 		}
 	}
 }
@@ -4785,22 +4786,13 @@ static void mark_ptr_or_null_regs(struct bpf_verifier_state *vstate, u32 regno,
 		release_reference_state(state, id);
 
 	for (i = 0; i < MAX_BPF_REG; i++)
-<<<<<<< HEAD
 		mark_ptr_or_null_reg(state, &regs[i], id, is_null);
-=======
-		mark_ptr_or_null_reg(&regs[i], id, is_null);
->>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
-
 	for (j = 0; j <= vstate->curframe; j++) {
 		state = vstate->frame[j];
 		bpf_for_each_spilled_reg(i, state, reg) {
 			if (!reg)
 				continue;
-<<<<<<< HEAD
 			mark_ptr_or_null_reg(state, reg, id, is_null);
-=======
-			mark_ptr_or_null_reg(reg, id, is_null);
->>>>>>> e0afa405744b (UPSTREAM: bpf: Generalize ptr_or_null regs check)
 		}
 	}
 }
@@ -6136,6 +6128,7 @@ static bool reg_type_mismatch_ok(enum bpf_reg_type type)
 		return true;
 	}
 }
+
 /* If an instruction was previously used with particular pointer types, then we
  * need to be careful to avoid cases such as the below, where it may be ok
  * for one branch accessing the pointer, but not ok for the other branch:
@@ -6293,6 +6286,7 @@ static int do_check(struct bpf_verifier_env *env)
 				 * save type to validate intersecting paths
 				 */
 				*prev_src_type = src_reg_type;
+
 			} else if (reg_type_mismatch(src_reg_type, *prev_src_type)) {
 				/* ABuser program is trying to use the same insn
 				 * dst_reg = *(u32*) (src_reg + off)
@@ -6843,8 +6837,10 @@ static void sanitize_dead_code(struct bpf_verifier_env *env)
 	}
 }
 
-/* convert load instructions that access fields of 'struct __sk_buff'
- * into sequence of instructions that access fields of 'struct sk_buff'
+/* convert load instructions that access fields of a context type into a
+ * sequence of instructions that access fields of the underlying structure:
+ *     struct __sk_buff    -> struct sk_buff
+ *     struct bpf_sock_ops -> struct sock
  */
 static int convert_ctx_accesses(struct bpf_verifier_env *env)
 {
@@ -6879,6 +6875,7 @@ static int convert_ctx_accesses(struct bpf_verifier_env *env)
 	insn = env->prog->insnsi + delta;
 
 	for (i = 0; i < insn_cnt; i++, insn++) {
+		bpf_convert_ctx_access_t convert_ctx_access;
 		bool ctx_access;
 
 		bpf_convert_ctx_access_t convert_ctx_access;

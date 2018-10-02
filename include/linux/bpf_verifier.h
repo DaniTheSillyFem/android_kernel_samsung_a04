@@ -117,6 +117,17 @@ struct bpf_reference_state {
 	int insn_idx;
 };
 
+struct bpf_reference_state {
+	/* Track each reference created with a unique id, even if the same
+	 * instruction creates the reference multiple times (eg, via CALL).
+	 */
+	int id;
+	/* Instruction where the allocation of this reference occurred. This
+	 * is used purely to inform the user of a reference leak.
+	 */
+	int insn_idx;
+};
+
 /* state of the program:
  * type of all registers and stack info
  */
@@ -133,6 +144,7 @@ struct bpf_func_state {
 	 * zero == main subprog
 	 */
 	u32 subprogno;
+
 	/* The following fields should be last. See copy_func_state() */
 	int acquired_refs;
 	struct bpf_reference_state *refs;

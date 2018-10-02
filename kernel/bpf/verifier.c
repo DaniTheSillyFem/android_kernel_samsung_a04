@@ -161,6 +161,18 @@ static const struct bpf_verifier_ops * const bpf_verifier_ops[] = {
  *
  * After the call R0 is set to return type of the function and registers R1-R5
  * are set to NOT_INIT to indicate that they are no longer readable.
+ *
+ * The following reference types represent a potential reference to a kernel
+ * resource which, after first being allocated, must be checked and freed by
+ * the BPF program:
+ * - PTR_TO_SOCKET_OR_NULL, PTR_TO_SOCKET
+ *
+ * When the verifier sees a helper call return a reference type, it allocates a
+ * pointer id for the reference and stores it in the current function state.
+ * Similar to the way that PTR_TO_MAP_VALUE_OR_NULL is converted into
+ * PTR_TO_MAP_VALUE, PTR_TO_SOCKET_OR_NULL becomes PTR_TO_SOCKET when the type
+ * passes through a NULL-check conditional. For the branch wherein the state is
+ * changed to CONST_IMM, the verifier releases the reference.
  */
 
 /* verifier_state + insn_idx are pushed to stack when branch is encountered */
@@ -209,7 +221,7 @@ struct bpf_call_arg_meta {
 	bool pkt_access;
 	int regno;
 	int access_size;
-    u64 msize_max_value;
+	u64 msize_max_value;
 	s64 msize_smax_value;
 	u64 msize_umax_value;
 	int ptr_id;
@@ -495,6 +507,8 @@ static int copy_##NAME##_state(struct bpf_func_state *dst,		\
 	       sizeof(*src->FIELD) * (src->COUNT / SIZE));		\
 	return 0;							\
 }
+/* copy_reference_state() */
+COPY_STATE_FN(reference, acquired_refs, refs, 1)
 /* copy_stack_state() */
 COPY_STATE_FN(stack, allocated_stack, stack, BPF_REG_SIZE)
 #undef COPY_STATE_FN
@@ -533,6 +547,8 @@ static int realloc_##NAME##_state(struct bpf_func_state *state, int size, \
 	state->FIELD = new_##FIELD;					\
 	return 0;							\
 }
+/* realloc_reference_state() */
+REALLOC_STATE_FN(reference, acquired_refs, refs, 1)
 /* realloc_stack_state() */
 REALLOC_STATE_FN(stack, allocated_stack, stack, BPF_REG_SIZE)
 #undef REALLOC_STATE_FN
@@ -608,12 +624,14 @@ static int acquire_reference_state(struct bpf_verifier_env *env, int insn_idx)
 	struct bpf_func_state *state = cur_func(env);
 	int new_ofs = state->acquired_refs;
 	int id, err;
+
 	err = realloc_reference_state(state, state->acquired_refs + 1, true);
 	if (err)
 		return err;
 	id = ++env->id_gen;
 	state->refs[new_ofs].id = id;
 	state->refs[new_ofs].insn_idx = insn_idx;
+
 	return id;
 }
 
@@ -1690,7 +1708,8 @@ static bool is_ctx_reg(struct bpf_verifier_env *env, int regno)
 {
 	const struct bpf_reg_state *reg = cur_regs(env) + regno;
 
-	return reg->type == PTR_TO_CTX;
+	return reg->type == PTR_TO_CTX ||
+	       reg->type == PTR_TO_SOCKET;
 }
 
 static bool is_sk_reg(struct bpf_verifier_env *env, int regno)
@@ -2864,6 +2883,7 @@ static bool check_arg_pair_ok(const struct bpf_func_proto *fn)
 static bool check_refcount_ok(const struct bpf_func_proto *fn)
 {
 	int count = 0;
+
 	if (arg_type_is_refcounted(fn->arg1_type))
 		count++;
 	if (arg_type_is_refcounted(fn->arg2_type))
@@ -2874,6 +2894,7 @@ static bool check_refcount_ok(const struct bpf_func_proto *fn)
 		count++;
 	if (arg_type_is_refcounted(fn->arg5_type))
 		count++;
+
 	/* We only support one arg being unreferenced at the moment,
 	 * which is sufficient for the helper functions we have right now.
 	 */
@@ -2946,7 +2967,6 @@ static int release_reference(struct bpf_verifier_env *env,
 
 	return release_reference_state(cur_func(env), meta->ptr_id);
 }
-
 
 static int check_func_call(struct bpf_verifier_env *env, struct bpf_insn *insn,
 			   int *insn_idx)
@@ -3031,6 +3051,7 @@ static int prepare_func_exit(struct bpf_verifier_env *env, int *insn_idx)
 	struct bpf_func_state *caller, *callee;
 	struct bpf_reg_state *r0;
 	int err;
+
 	callee = state->frame[state->curframe];
 	r0 = &callee->regs[BPF_REG_0];
 	if (r0->type == PTR_TO_STACK) {
@@ -3097,6 +3118,7 @@ static int check_reference_leak(struct bpf_verifier_env *env)
 {
 	struct bpf_func_state *state = cur_func(env);
 	int i;
+
 	for (i = 0; i < state->acquired_refs; i++) {
 		verbose(env, "Unreleased reference id=%d alloc_insn=%d\n",
 			state->refs[i].id, state->refs[i].insn_idx);
@@ -3119,7 +3141,6 @@ static void do_refine_retval_range(struct bpf_reg_state *regs, int ret_type,
 	__reg_deduce_bounds(ret_reg);
 	__reg_bound_offset(ret_reg);
 }
-
 
 static int check_helper_call(struct bpf_verifier_env *env, int func_id, int insn_idx)
 {
@@ -3258,6 +3279,9 @@ static int check_helper_call(struct bpf_verifier_env *env, int func_id, int insn
 		regs[BPF_REG_0].map_ptr = meta.map_ptr;
 		regs[BPF_REG_0].id = ++env->id_gen;
 	} else if (fn->ret_type == RET_PTR_TO_SOCKET_OR_NULL) {
+		int id = acquire_reference_state(env, insn_idx);
+		if (id < 0)
+			return id;
 		mark_reg_known_zero(env, regs, BPF_REG_0);
 		regs[BPF_REG_0].type = PTR_TO_SOCKET_OR_NULL;
 		if (is_acquire_function(func_id)) {
@@ -4825,7 +4849,6 @@ static void mark_ptr_or_null_regs(struct bpf_verifier_state *vstate, u32 regno,
 
 	if (reg_is_refcounted_or_null(&regs[regno]) && is_null)
 		release_reference_state(state, id);
-
 	for (i = 0; i < MAX_BPF_REG; i++)
 		mark_ptr_or_null_reg(state, &regs[i], id, is_null);
 	for (j = 0; j <= vstate->curframe; j++) {
@@ -5991,6 +6014,9 @@ static bool func_states_equal(struct bpf_verifier_env *env, struct bpf_func_stat
 
 	if (!refsafe(old, cur))
 	return false;
+
+	if (!refsafe(old, cur))
+		return false;
 
 	return true;
 }

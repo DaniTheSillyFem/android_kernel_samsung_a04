@@ -767,9 +767,16 @@ static int map_lookup_elem(union bpf_attr *attr)
 				copy_map_value(map, value, ptr);
 			/* mask lock, since value wasn't zero inited */
 			check_and_init_map_lock(map, value);
+		ptr = map->ops->map_lookup_elem(map, key);
+		if (IS_ERR(ptr)) {
+			err = PTR_ERR(ptr);
+		} else if (!ptr) {
+			err = -ENOENT;
+		} else {
+			err = 0;
+			memcpy(value, ptr, value_size);
 		}
 		rcu_read_unlock();
-		err = ptr ? 0 : -ENOENT;
 	}
 	this_cpu_dec(bpf_prog_active);
 	preempt_enable();

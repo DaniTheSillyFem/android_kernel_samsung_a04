@@ -317,8 +317,8 @@ static bool btf_type_is_modifier(const struct btf_type *t)
 static bool btf_type_is_void(const struct btf_type *t)
 {
 	return t == &btf_void;
-
 }
+
 static bool btf_type_is_fwd(const struct btf_type *t)
 {
 	return BTF_INFO_KIND(t->info) == BTF_KIND_FWD;
@@ -1434,6 +1434,10 @@ static int btf_modifier_resolve(struct btf_verifier_env *env,
 		return -EINVAL;
 	}
 
+	/* "typedef void new_void", "const void"...etc */
+	if (btf_type_is_void(next_type) || btf_type_is_fwd(next_type))
+		goto resolved;
+
 	if (!env_type_is_resolve_sink(env, next_type) &&
 	    !env_type_is_resolved(env, next_type_id))
 		return env_stack_push(env, next_type, next_type_id);
@@ -1474,6 +1478,10 @@ static int btf_ptr_resolve(struct btf_verifier_env *env,
 		btf_verifier_log_type(env, v->t, "Invalid type_id");
 		return -EINVAL;
 	}
+
+	/* "void *" */
+	if (btf_type_is_void(next_type) || btf_type_is_fwd(next_type))
+		goto resolved;
 
 	if (!env_type_is_resolve_sink(env, next_type) &&
 	    !env_type_is_resolved(env, next_type_id))

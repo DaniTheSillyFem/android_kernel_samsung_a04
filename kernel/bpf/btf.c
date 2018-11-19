@@ -1434,10 +1434,6 @@ static int btf_modifier_resolve(struct btf_verifier_env *env,
 		return -EINVAL;
 	}
 
-	/* "typedef void new_void", "const void"...etc */
-	if (btf_type_is_void(next_type) || btf_type_is_fwd(next_type))
-		goto resolved;
-
 	if (!env_type_is_resolve_sink(env, next_type) &&
 	    !env_type_is_resolved(env, next_type_id))
 		return env_stack_push(env, next_type, next_type_id);
@@ -1478,10 +1474,6 @@ static int btf_ptr_resolve(struct btf_verifier_env *env,
 		btf_verifier_log_type(env, v->t, "Invalid type_id");
 		return -EINVAL;
 	}
-
-	/* "void *" */
-	if (btf_type_is_void(next_type) || btf_type_is_fwd(next_type))
-		goto resolved;
 
 	if (!env_type_is_resolve_sink(env, next_type) &&
 	    !env_type_is_resolved(env, next_type_id))
@@ -2236,8 +2228,8 @@ static void btf_func_proto_log(struct btf_verifier_env *env,
 {
 	const struct btf_param *args = (const struct btf_param *)(t + 1);
 	u16 nr_args = btf_type_vlen(t), i;
-	btf_verifier_log(env, "return=%u args=(", t->type);
 
+	btf_verifier_log(env, "return=%u args=(", t->type);
 	if (!nr_args) {
 		btf_verifier_log(env, "void");
 		goto done;
@@ -2265,6 +2257,7 @@ static void btf_func_proto_log(struct btf_verifier_env *env,
 		else
 			btf_verifier_log(env, ", vararg");
 	}
+
 done:
 	btf_verifier_log(env, ")");
 }
@@ -2328,6 +2321,7 @@ static int btf_func_proto_check(struct btf_verifier_env *env,
 	const struct btf *btf;
 	u16 nr_args, i;
 	int err;
+
 	btf = env->btf;
 	args = (const struct btf_param *)(t + 1);
 	nr_args = btf_type_vlen(t);
@@ -2335,17 +2329,20 @@ static int btf_func_proto_check(struct btf_verifier_env *env,
 	/* Check func return type which could be "void" (t->type == 0) */
 	if (t->type) {
 		u32 ret_type_id = t->type;
+
 		ret_type = btf_type_by_id(btf, ret_type_id);
 		if (!ret_type) {
 			btf_verifier_log_type(env, t, "Invalid return type");
 			return -EINVAL;
 		}
+
 		if (btf_type_needs_resolve(ret_type) &&
 		    !env_type_is_resolved(env, ret_type_id)) {
 			err = btf_resolve(env, ret_type, ret_type_id);
 			if (err)
 				return err;
 		}
+
 		/* Ensure the return type is a type that has a size */
 		if (!btf_type_id_size(btf, &ret_type_id, NULL)) {
 			btf_verifier_log_type(env, t, "Invalid return type");
@@ -2370,6 +2367,7 @@ static int btf_func_proto_check(struct btf_verifier_env *env,
 	for (i = 0; i < nr_args; i++) {
 		const struct btf_type *arg_type;
 		u32 arg_type_id;
+
 		arg_type_id = args[i].type;
 		arg_type = btf_type_by_id(btf, arg_type_id);
 		if (!arg_type) {
@@ -2400,8 +2398,10 @@ static int btf_func_proto_check(struct btf_verifier_env *env,
 			break;
 		}
 	}
+
 	return err;
 }
+
 static int btf_func_check(struct btf_verifier_env *env,
 			  const struct btf_type *t)
 {
@@ -2409,6 +2409,7 @@ static int btf_func_check(struct btf_verifier_env *env,
 	const struct btf_param *args;
 	const struct btf *btf;
 	u16 nr_args, i;
+
 	btf = env->btf;
 	proto_type = btf_type_by_id(btf, t->type);
 
@@ -2425,6 +2426,7 @@ static int btf_func_check(struct btf_verifier_env *env,
 			return -EINVAL;
 		}
 	}
+
 	return 0;
 }
 

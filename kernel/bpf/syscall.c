@@ -1274,6 +1274,8 @@ static void __bpf_prog_put(struct bpf_prog *prog, bool do_idr_lock)
 		btf_put(prog->aux->btf);
 		kvfree(prog->aux->func_info);
 		bpf_prog_free_linfo(prog);
+		bpf_prog_kallsyms_del_all(prog);
+		btf_put(prog->aux->btf);
 
 		call_rcu(&prog->aux->rcu, __bpf_prog_put_rcu);
 	}

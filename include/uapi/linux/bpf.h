@@ -3172,4 +3172,9 @@ struct bpf_sockopt {
 	__s32	retval;
 };
 
+struct bpf_func_info {
+	__u32	insn_offset;
+	__u32	type_id;
+};
+
 #endif /* _UAPI__LINUX_BPF_H__ */

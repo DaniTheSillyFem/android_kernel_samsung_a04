@@ -398,6 +398,7 @@ struct bpf_prog_aux {
 	 * main prog always has linfo_idx == 0
 	 */
 	u32 linfo_idx;
+
 	union {
 		struct work_struct work;
 		struct rcu_head	rcu;

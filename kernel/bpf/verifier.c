@@ -5646,11 +5646,13 @@ static int check_btf_func(struct bpf_verifier_env *env,
 		urecord += urec_size;
 	}
 
+	prog->aux->btf = btf;
 	prog->aux->func_info = krecord;
 	prog->aux->func_info_cnt = nfuncs;
 	return 0;
 
 err_free:
+
 	kvfree(krecord);
 	return ret;
 }

@@ -1276,6 +1276,7 @@ static void __bpf_prog_put(struct bpf_prog *prog, bool do_idr_lock)
 		bpf_prog_free_linfo(prog);
 		bpf_prog_kallsyms_del_all(prog);
 		btf_put(prog->aux->btf);
+		kvfree(prog->aux->func_info);
 
 		call_rcu(&prog->aux->rcu, __bpf_prog_put_rcu);
 	}
@@ -2402,6 +2403,7 @@ static int bpf_prog_get_info_by_fd(struct file *file,
 
 			if (bpf_dump_raw_ok(file->f_cred)) {
 				char __user *user_finfo;
+
 				user_finfo = u64_to_user_ptr(info.func_info);
 				ucnt = min_t(u32, info.func_info_cnt, ucnt);
 				if (copy_to_user(user_finfo, prog->aux->func_info,

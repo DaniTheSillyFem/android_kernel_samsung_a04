@@ -5546,6 +5546,7 @@ err_free:
 /* The minimum supported BTF func info size */
 #define MIN_BPF_FUNCINFO_SIZE	8
 #define MAX_FUNCINFO_REC_SIZE	252
+
 static int check_btf_func(struct bpf_verifier_env *env,
 			  const union bpf_attr *attr,
 			  union bpf_attr __user *uattr)
@@ -5641,13 +5642,11 @@ static int check_btf_func(struct bpf_verifier_env *env,
 		urecord += urec_size;
 	}
 
-	prog->aux->btf = btf;
 	prog->aux->func_info = krecord;
 	prog->aux->func_info_cnt = nfuncs;
 	return 0;
 
 err_free:
-
 	kvfree(krecord);
 	return ret;
 }
@@ -5664,6 +5663,7 @@ static void adjust_btf_func(struct bpf_verifier_env *env)
 #define MIN_BPF_LINEINFO_SIZE	(offsetof(struct bpf_line_info, line_col) + \
 		sizeof(((struct bpf_line_info *)(0))->line_col))
 #define MAX_LINEINFO_REC_SIZE	MAX_FUNCINFO_REC_SIZE
+
 static int check_btf_line(struct bpf_verifier_env *env,
 			  const union bpf_attr *attr,
 			  union bpf_attr __user *uattr)
@@ -5675,14 +5675,17 @@ static int check_btf_line(struct bpf_verifier_env *env,
 	const struct btf *btf;
 	void __user *ulinfo;
 	int err;
+
 	nr_linfo = attr->line_info_cnt;
 	if (!nr_linfo)
 		return 0;
+
 	rec_size = attr->line_info_rec_size;
 	if (rec_size < MIN_BPF_LINEINFO_SIZE ||
 	    rec_size > MAX_LINEINFO_REC_SIZE ||
 	    rec_size & (sizeof(u32) - 1))
 		return -EINVAL;
+
 	/* Need to zero it in case the userspace may
 	 * pass in a smaller bpf_line_info object.
 	 */
@@ -5690,8 +5693,10 @@ static int check_btf_line(struct bpf_verifier_env *env,
 			 GFP_KERNEL | __GFP_NOWARN);
 	if (!linfo)
 		return -ENOMEM;
+
 	prog = env->prog;
 	btf = prog->aux->btf;
+
 	s = 0;
 	sub = env->subprog_info;
 	ulinfo = u64_to_user_ptr(attr->line_info);
@@ -5708,10 +5713,12 @@ static int check_btf_line(struct bpf_verifier_env *env,
 			}
 			goto err_free;
 		}
+
 		if (copy_from_user(&linfo[i], ulinfo, ncopy)) {
 			err = -EFAULT;
 			goto err_free;
 		}
+
 		/*
 		 * Check insn_off to ensure
 		 * 1) strictly increasing AND
@@ -5731,12 +5738,15 @@ static int check_btf_line(struct bpf_verifier_env *env,
 			err = -EINVAL;
 			goto err_free;
 		}
+
 		if (!btf_name_by_offset(btf, linfo[i].line_off) ||
 		    !btf_name_by_offset(btf, linfo[i].file_name_off)) {
+
 			verbose(env, "Invalid line_info[%u].line_off or .file_name_off\n", i);
 			err = -EINVAL;
 			goto err_free;
 		}
+
 		if (s != env->subprog_cnt) {
 			if (linfo[i].insn_off == sub[s].start) {
 				sub[s].linfo_idx = i;
@@ -5747,37 +5757,47 @@ static int check_btf_line(struct bpf_verifier_env *env,
 				goto err_free;
 			}
 		}
+
 		prev_offset = linfo[i].insn_off;
 		ulinfo += rec_size;
 	}
+
 	if (s != env->subprog_cnt) {
 		verbose(env, "missing bpf_line_info for %u funcs starting from func#%u\n",
 			env->subprog_cnt - s, s);
 		err = -EINVAL;
 		goto err_free;
 	}
+
 	prog->aux->linfo = linfo;
 	prog->aux->nr_linfo = nr_linfo;
+
 	return 0;
+
 err_free:
 	kvfree(linfo);
 	return err;
 }
+
 static int check_btf_info(struct bpf_verifier_env *env,
 			  const union bpf_attr *attr,
 			  union bpf_attr __user *uattr)
 {
 	struct btf *btf;
 	int err;
+
 	if (!attr->func_info_cnt && !attr->line_info_cnt)
 		return 0;
+
 	btf = btf_get_by_fd(attr->prog_btf_fd);
 	if (IS_ERR(btf))
 		return PTR_ERR(btf);
 	env->prog->aux->btf = btf;
+
 	err = check_btf_func(env, attr, uattr);
 	if (err)
 		return err;
+
 	err = check_btf_line(env, attr, uattr);
 	if (err)
 		return err;
@@ -7155,8 +7175,8 @@ static int jit_subprogs(struct bpf_verifier_env *env)
 	err = bpf_prog_alloc_jited_linfo(prog);
 	if (err)
 		goto out_undo_insn;
-	err = -ENOMEM;
 
+	err = -ENOMEM;
 	func = kcalloc(env->subprog_cnt, sizeof(prog), GFP_KERNEL);
 	if (!func)
 		goto out_undo_insn;
@@ -7282,6 +7302,7 @@ out_undo_insn:
 		insn->imm = env->insn_aux_data[i].call_imm;
 	bpf_prog_free_jited_linfo(prog);
 	}
+	bpf_prog_free_jited_linfo(prog);
 	return err;
 }
 

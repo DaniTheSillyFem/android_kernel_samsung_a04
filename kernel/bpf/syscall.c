@@ -1277,6 +1277,7 @@ static void __bpf_prog_put(struct bpf_prog *prog, bool do_idr_lock)
 		bpf_prog_kallsyms_del_all(prog);
 		btf_put(prog->aux->btf);
 		kvfree(prog->aux->func_info);
+		bpf_prog_free_linfo(prog);
 
 		call_rcu(&prog->aux->rcu, __bpf_prog_put_rcu);
 	}
@@ -2178,6 +2179,7 @@ static int set_info_rec_size(struct bpf_prog_info *info)
 	 * zero.  In this case, the kernel will set the expected
 	 * _rec_size back to the info.
 	 */
+
 	if ((info->func_info_cnt || info->func_info_rec_size) &&
 	    info->func_info_rec_size != sizeof(struct bpf_func_info))
 		return -EINVAL;
@@ -2190,6 +2192,7 @@ static int set_info_rec_size(struct bpf_prog_info *info)
 	info->func_info_rec_size = sizeof(struct bpf_func_info);
 	info->line_info_rec_size = sizeof(struct bpf_line_info);
 	info->jited_line_info_rec_size = sizeof(__u64);
+
 	return 0;
 }
 
@@ -2428,6 +2431,44 @@ static int bpf_prog_get_info_by_fd(struct file *file,
 		if (bpf_dump_raw_ok(file->f_cred)) {
 			__u64 __user *user_linfo;
 			u32 i;
+			user_linfo = u64_to_user_ptr(info.jited_line_info);
+			ulen = min_t(u32, info.jited_line_info_cnt, ulen);
+			for (i = 0; i < ulen; i++) {
+				if (put_user((__u64)(long)prog->aux->jited_linfo[i],
+					     &user_linfo[i]))
+					return -EFAULT;
+			}
+		} else {
+			info.jited_line_info = 0;
+		}
+	}
+
+	ulen = info.line_info_cnt;
+	info.line_info_cnt = prog->aux->nr_linfo;
+	if (info.line_info_cnt && ulen) {
+		if (bpf_dump_raw_ok(file->f_cred)) {
+			__u8 __user *user_linfo;
+
+			user_linfo = u64_to_user_ptr(info.line_info);
+			ulen = min_t(u32, info.line_info_cnt, ulen);
+			if (copy_to_user(user_linfo, prog->aux->linfo,
+					 info.line_info_rec_size * ulen))
+				return -EFAULT;
+		} else {
+			info.line_info = 0;
+		}
+	}
+
+	ulen = info.jited_line_info_cnt;
+	if (prog->aux->jited_linfo)
+		info.jited_line_info_cnt = prog->aux->nr_linfo;
+	else
+		info.jited_line_info_cnt = 0;
+	if (info.jited_line_info_cnt && ulen) {
+		if (bpf_dump_raw_ok(file->f_cred)) {
+			__u64 __user *user_linfo;
+			u32 i;
+
 			user_linfo = u64_to_user_ptr(info.jited_line_info);
 			ulen = min_t(u32, info.jited_line_info_cnt, ulen);
 			for (i = 0; i < ulen; i++) {

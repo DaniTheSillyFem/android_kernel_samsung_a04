@@ -114,23 +114,29 @@ int bpf_prog_alloc_jited_linfo(struct bpf_prog *prog)
 {
 	if (!prog->aux->nr_linfo || !prog->jit_requested)
 		return 0;
+
 	prog->aux->jited_linfo = kcalloc(prog->aux->nr_linfo,
 					 sizeof(*prog->aux->jited_linfo),
 					 GFP_KERNEL | __GFP_NOWARN);
 	if (!prog->aux->jited_linfo)
 		return -ENOMEM;
+
 	return 0;
 }
+
 void bpf_prog_free_jited_linfo(struct bpf_prog *prog)
 {
 	kfree(prog->aux->jited_linfo);
 	prog->aux->jited_linfo = NULL;
 }
+
 void bpf_prog_free_unused_jited_linfo(struct bpf_prog *prog)
 {
 	if (prog->aux->jited_linfo && !prog->aux->jited_linfo[0])
 		bpf_prog_free_jited_linfo(prog);
 }
+
+
 /* The jit engine is responsible to provide an array
  * for insn_off to the jited_off mapping (insn_to_jit_off).
  *
@@ -161,9 +167,11 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
 	u32 linfo_idx, insn_start, insn_end, nr_linfo, i;
 	const struct bpf_line_info *linfo;
 	void **jited_linfo;
+
 	if (!prog->aux->jited_linfo)
 		/* Userspace did not provide linfo */
 		return;
+
 	linfo_idx = prog->aux->linfo_idx;
 	linfo = &prog->aux->linfo[linfo_idx];
 	insn_start = linfo[0].insn_off;
@@ -171,6 +179,7 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
 	jited_linfo = &prog->aux->jited_linfo[linfo_idx];
 	jited_linfo[0] = prog->bpf_func;
 	nr_linfo = prog->aux->nr_linfo - linfo_idx;
+
 	for (i = 1; i < nr_linfo && linfo[i].insn_off < insn_end; i++)
 		/* The verifier ensures that linfo[i].insn_off is
 		 * strictly increasing
@@ -178,6 +187,7 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
 		jited_linfo[i] = prog->bpf_func +
 			insn_to_jit_off[linfo[i].insn_off - insn_start - 1];
 }
+
 void bpf_prog_free_linfo(struct bpf_prog *prog)
 {
 	bpf_prog_free_jited_linfo(prog);
@@ -378,6 +388,7 @@ static void bpf_adj_linfo(struct bpf_prog *prog, u32 off, u32 delta)
 {
 	struct bpf_line_info *linfo;
 	u32 i, nr_linfo;
+
 	nr_linfo = prog->aux->nr_linfo;
 	if (!nr_linfo || !delta)
 		return;
@@ -385,6 +396,7 @@ static void bpf_adj_linfo(struct bpf_prog *prog, u32 off, u32 delta)
 	for (i = 0; i < nr_linfo; i++)
 		if (off < linfo[i].insn_off)
 			break;
+
 	/* Push all off < linfo[i].insn_off by delta */
 	for (; i < nr_linfo; i++)
 		linfo[i].insn_off += delta;
@@ -1743,6 +1755,7 @@ struct bpf_prog *bpf_prog_select_runtime(struct bpf_prog *fp, int *err)
 		*err = bpf_prog_alloc_jited_linfo(fp);
 		if (*err)
 			return fp;
+
 		fp = bpf_int_jit_compile(fp);
 		if (!fp->jited) {
 			bpf_prog_free_jited_linfo(fp);

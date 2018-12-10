@@ -335,12 +335,14 @@ static int cgroup_storage_check_btf(const struct bpf_map *map,
 	 *	__u32	attach_type;
 	 * };
 	 */
+
 	/*
 	 * Key_type must be a structure with two fields.
 	 */
 	if (BTF_INFO_KIND(key_type->info) != BTF_KIND_STRUCT ||
 	    BTF_INFO_VLEN(key_type->info) != 2)
 		return -EINVAL;
+
 	/*
 	 * The first field must be a 64 bit integer at 0 offset.
 	 */
@@ -348,6 +350,7 @@ static int cgroup_storage_check_btf(const struct bpf_map *map,
 	size = FIELD_SIZEOF(struct bpf_cgroup_storage_key, cgroup_inode_id);
 	if (!btf_member_is_reg_int(btf, key_type, m, 0, size))
 		return -EINVAL;
+
 	/*
 	 * The second field must be a 32 bit integer at 64 bit offset.
 	 */
@@ -368,6 +371,7 @@ static void cgroup_storage_seq_show_elem(struct bpf_map *map, void *_key,
 	struct bpf_cgroup_storage_key *key = _key;
 	struct bpf_cgroup_storage *storage;
 	int cpu;
+
 	rcu_read_lock();
 	storage = cgroup_storage_lookup(map_to_storage(map), key, false);
 

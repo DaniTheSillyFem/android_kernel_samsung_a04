@@ -2244,10 +2244,12 @@ static void btf_func_proto_log(struct btf_verifier_env *env,
 	btf_verifier_log(env, "%u %s", args[0].type,
 			 __btf_name_by_offset(env->btf,
 					    args[0].name_off));
+
 	for (i = 1; i < nr_args - 1; i++)
 		btf_verifier_log(env, ", %u %s", args[i].type,
 				 __btf_name_by_offset(env->btf,
 						    args[i].name_off));
+
 	if (nr_args > 1) {
 		const struct btf_param *last_arg = &args[nr_args - 1];
 		if (last_arg->type)

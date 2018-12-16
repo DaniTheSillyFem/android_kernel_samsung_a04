@@ -550,7 +550,7 @@ static bool btf_type_int_is_regular(const struct btf_type *t)
 }
 
 /*
-* Check that given struct member is a regular int with expected
+ * Check that given struct member is a regular int with expected
  * offset and size.
  */
 bool btf_member_is_reg_int(const struct btf *btf, const struct btf_type *s,
@@ -571,6 +571,7 @@ bool btf_member_is_reg_int(const struct btf *btf, const struct btf_type *s,
 	if (btf_type_kflag(s)) {
 		u32 bitfield_size = BTF_MEMBER_BITFIELD_SIZE(m->offset);
 		u32 bit_offset = BTF_MEMBER_BIT_OFFSET(m->offset);
+
 		/* if kflag set, int should be a regular int and
 		 * bit offset should be at byte boundary.
 		 */
@@ -578,6 +579,7 @@ bool btf_member_is_reg_int(const struct btf *btf, const struct btf_type *s,
 		       BITS_ROUNDUP_BYTES(bit_offset) == expected_offset &&
 		       BITS_ROUNDUP_BYTES(nr_bits) == expected_size;
 	}
+
 	if (BTF_INT_OFFSET(int_data) ||
 	    BITS_PER_BYTE_MASKED(m->offset) ||
 	    BITS_ROUNDUP_BYTES(m->offset) != expected_offset ||

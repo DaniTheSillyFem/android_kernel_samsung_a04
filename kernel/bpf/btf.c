@@ -1020,6 +1020,7 @@ static int btf_generic_check_kflag_member(struct btf_verifier_env *env,
 					"Invalid member bitfield_size");
 		return -EINVAL;
 	}
+
 	/* bitfield size is 0, so member->offset represents bit offset only.
 	 * It is safe to call non kflag check_member variants.
 	 */
@@ -1089,12 +1090,14 @@ static int btf_int_check_kflag_member(struct btf_verifier_env *env,
 	u32 int_data = btf_type_int(member_type);
 	u32 struct_size = struct_type->size;
 	u32 nr_copy_bits;
+
 	/* a regular int type is required for the kflag int member */
 	if (!btf_type_int_is_regular(member_type)) {
 		btf_verifier_log_member(env, struct_type, member,
 					"Invalid member base type");
 		return -EINVAL;
 	}
+
 	/* check sanity of bitfield size */
 	nr_bits = BTF_MEMBER_BITFIELD_SIZE(member->offset);
 	struct_bits_off = BTF_MEMBER_BIT_OFFSET(member->offset);
@@ -1108,12 +1111,14 @@ static int btf_int_check_kflag_member(struct btf_verifier_env *env,
 						"Invalid member offset");
 			return -EINVAL;
 		}
+
 		nr_bits = nr_int_data_bits;
 	} else if (nr_bits > nr_int_data_bits) {
 		btf_verifier_log_member(env, struct_type, member,
 					"Invalid member bitfield_size");
 		return -EINVAL;
 	}
+
 	bytes_offset = BITS_ROUNDDOWN_BYTES(struct_bits_off);
 	nr_copy_bits = nr_bits + BITS_PER_BYTE_MASKED(struct_bits_off);
 	if (nr_copy_bits > BITS_PER_U64) {
@@ -1121,12 +1126,14 @@ static int btf_int_check_kflag_member(struct btf_verifier_env *env,
 					"nr_copy_bits exceeds 64");
 		return -EINVAL;
 	}
+
 	if (struct_size < bytes_offset ||
 	    struct_size - bytes_offset < BITS_ROUNDUP_BYTES(nr_copy_bits)) {
 		btf_verifier_log_member(env, struct_type, member,
 					"Member exceeds struct_size");
 		return -EINVAL;
 	}
+
 	return 0;
 }
 
@@ -1235,6 +1242,7 @@ static void btf_bitfield_seq_show(void *data, u8 bits_offset,
 	seq_printf(m, "0x%llx", print_num);
 }
 
+
 static void btf_int_bits_seq_show(const struct btf *btf,
 				  const struct btf_type *t,
 				  void *data, u8 bits_offset,
@@ -1340,14 +1348,17 @@ static int btf_modifier_check_kflag_member(struct btf_verifier_env *env,
 	u32 resolved_type_id = member->type;
 	struct btf_member resolved_member;
 	struct btf *btf = env->btf;
+
 	resolved_type = btf_type_id_size(btf, &resolved_type_id, NULL);
 	if (!resolved_type) {
 		btf_verifier_log_member(env, struct_type, member,
 					"Invalid member");
 		return -EINVAL;
 	}
+
 	resolved_member = *member;
 	resolved_member.type = resolved_type_id;
+
 	return btf_type_ops(resolved_type)->check_kflag_member(env, struct_type,
 							       &resolved_member,
 							       resolved_type);
@@ -2076,6 +2087,7 @@ static int btf_enum_check_kflag_member(struct btf_verifier_env *env,
 {
 	u32 struct_bits_off, nr_bits, bytes_end, struct_size;
 	u32 int_bitsize = sizeof(int) * BITS_PER_BYTE;
+
 	struct_bits_off = BTF_MEMBER_BIT_OFFSET(member->offset);
 	nr_bits = BTF_MEMBER_BITFIELD_SIZE(member->offset);
 	if (!nr_bits) {
@@ -2084,12 +2096,14 @@ static int btf_enum_check_kflag_member(struct btf_verifier_env *env,
 						"Member is not byte aligned");
 				return -EINVAL;
 		}
+
 		nr_bits = int_bitsize;
 	} else if (nr_bits > int_bitsize) {
 		btf_verifier_log_member(env, struct_type, member,
 					"Invalid member bitfield_size");
 		return -EINVAL;
 	}
+
 	struct_size = struct_type->size;
 	bytes_end = BITS_ROUNDUP_BYTES(struct_bits_off + nr_bits);
 	if (struct_size < bytes_end) {
@@ -2097,6 +2111,7 @@ static int btf_enum_check_kflag_member(struct btf_verifier_env *env,
 					"Member exceeds struct_size");
 		return -EINVAL;
 	}
+
 	return 0;
 }
 

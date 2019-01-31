@@ -788,7 +788,7 @@ static int map_lookup_elem(union bpf_attr *attr)
 			err = -ENOENT;
 		} else {
 			err = 0;
-			memcpy(value, ptr, value_size);
+			copy_map_value(map, value, ptr);
 		}
 		rcu_read_unlock();
 	}

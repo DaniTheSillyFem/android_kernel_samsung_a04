@@ -2060,6 +2060,7 @@ int btf_find_spin_lock(const struct btf *btf, const struct btf_type *t)
 	u32 i, off = -ENOENT;
 	if (!__btf_type_is_struct(t))
 		return -EINVAL;
+
 	for_each_member(i, t, member) {
 		const struct btf_type *member_type = btf_type_by_id(btf,
 								    member->type);

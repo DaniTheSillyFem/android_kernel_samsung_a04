@@ -234,6 +234,7 @@ const struct bpf_func_proto bpf_get_current_comm_proto = {
 };
 
 #if defined(CONFIG_QUEUED_SPINLOCKS) || defined(CONFIG_BPF_ARCH_SPINLOCK)
+
 static inline void __bpf_spin_lock(struct bpf_spin_lock *lock)
 {
 	arch_spinlock_t *l = (void *)lock;
@@ -241,6 +242,7 @@ static inline void __bpf_spin_lock(struct bpf_spin_lock *lock)
 		__u32 val;
 		arch_spinlock_t lock;
 	} u = { .lock = __ARCH_SPIN_LOCK_UNLOCKED };
+
 	compiletime_assert(u.val == 0, "__ARCH_SPIN_LOCK_UNLOCKED not 0");
 	BUILD_BUG_ON(sizeof(*l) != sizeof(__u32));
 	BUILD_BUG_ON(sizeof(*lock) != sizeof(__u32));
@@ -250,13 +252,16 @@ static inline void __bpf_spin_lock(struct bpf_spin_lock *lock)
 static inline void __bpf_spin_unlock(struct bpf_spin_lock *lock)
 {
 	arch_spinlock_t *l = (void *)lock;
+
 	arch_spin_unlock(l);
 }
 
 #else
+
 static inline void __bpf_spin_lock(struct bpf_spin_lock *lock)
 {
 	atomic_t *l = (void *)lock;
+
 	BUILD_BUG_ON(sizeof(*l) != sizeof(*lock));
 	do {
 		atomic_cond_read_relaxed(l, !VAL);
@@ -271,9 +276,11 @@ static inline void __bpf_spin_unlock(struct bpf_spin_lock *lock)
 #endif
 
 static DEFINE_PER_CPU(unsigned long, irqsave_flags);
+
 notrace BPF_CALL_1(bpf_spin_lock, struct bpf_spin_lock *, lock)
 {
 	unsigned long flags;
+
 	local_irq_save(flags);
 	__bpf_spin_lock(lock);
 	__this_cpu_write(irqsave_flags, flags);
@@ -290,6 +297,7 @@ const struct bpf_func_proto bpf_spin_lock_proto = {
 notrace BPF_CALL_1(bpf_spin_unlock, struct bpf_spin_lock *, lock)
 {
 	unsigned long flags;
+
 	flags = __this_cpu_read(irqsave_flags);
 	__bpf_spin_unlock(lock);
 	local_irq_restore(flags);

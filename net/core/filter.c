@@ -5262,6 +5262,7 @@ bpf_base_func_proto(enum bpf_func_id func_id)
 	}
 	if (!capable(CAP_SYS_ADMIN))
 		return NULL;
+
 	switch (func_id) {
 	case BPF_FUNC_spin_lock:
 		return &bpf_spin_lock_proto;

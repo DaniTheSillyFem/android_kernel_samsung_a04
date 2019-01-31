@@ -1578,6 +1578,7 @@ static int check_map_access(struct bpf_verifier_env *env, u32 regno,
 
 	if (map_value_has_spin_lock(reg->map_ptr)) {
 		u32 lock = reg->map_ptr->spin_lock_off;
+
 		/* if any part of struct bpf_spin_lock can be touched by
 		 * load/store reject this program.
 		 * To check that [x1, x2) overlaps with [y1, y2)
@@ -2475,6 +2476,7 @@ static int process_spin_lock(struct bpf_verifier_env *env, int regno,
 	bool is_const = tnum_is_const(reg->var_off);
 	struct bpf_map *map = reg->map_ptr;
 	u64 val = reg->var_off.value;
+
 	if (reg->type != PTR_TO_MAP_VALUE) {
 		verbose(env, "R%d is not a pointer to map_value\n", regno);
 		return -EINVAL;
@@ -6436,6 +6438,9 @@ static bool states_equal(struct bpf_verifier_env *env,
 	int i;
 
 	if (old->curframe != cur->curframe)
+		return false;
+
+	if (old->active_spin_lock != cur->active_spin_lock)
 		return false;
 
 	if (old->active_spin_lock != cur->active_spin_lock)

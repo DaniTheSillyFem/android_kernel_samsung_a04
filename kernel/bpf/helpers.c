@@ -315,6 +315,7 @@ void copy_map_value_locked(struct bpf_map *map, void *dst, void *src,
 			   bool lock_src)
 {
 	struct bpf_spin_lock *lock;
+
 	if (lock_src)
 		lock = src + map->spin_lock_off;
 	else

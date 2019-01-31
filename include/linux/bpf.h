@@ -130,6 +130,8 @@ static inline void copy_map_value(struct bpf_map *map, void *dst, void *src)
 		memcpy(dst, src, map->value_size);
 	}
 }
+void copy_map_value_locked(struct bpf_map *map, void *dst, void *src,
+			   bool lock_src);
 
 struct bpf_offload_dev;
 static inline bool map_value_has_spin_lock(const struct bpf_map *map)

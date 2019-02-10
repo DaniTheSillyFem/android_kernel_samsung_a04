@@ -1033,6 +1033,7 @@ static inline u32 bpf_sock_convert_ctx_access(enum bpf_access_type type,
 #ifdef CONFIG_INET
 bool bpf_tcp_sock_is_valid_access(int off, int size, enum bpf_access_type type,
 				  struct bpf_insn_access_aux *info);
+
 u32 bpf_tcp_sock_convert_ctx_access(enum bpf_access_type type,
 				    const struct bpf_insn *si,
 				    struct bpf_insn *insn_buf,

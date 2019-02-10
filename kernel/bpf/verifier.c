@@ -6307,7 +6307,6 @@ static bool regsafe(struct bpf_verifier_env *env, struct bpf_reg_state *rold,
 	case PTR_TO_SOCK_COMMON_OR_NULL:
 	case PTR_TO_TCP_SOCK:
 	case PTR_TO_TCP_SOCK_OR_NULL:
-
 		/* Only valid matches are exact, which memcmp() above
 		 * would have accepted
 		 */

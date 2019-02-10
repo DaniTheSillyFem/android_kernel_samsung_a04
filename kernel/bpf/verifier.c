@@ -1765,6 +1765,7 @@ static int check_sock_access(struct bpf_verifier_env *env, int insn_idx,
 
 	verbose(env, "R%d invalid %s access off=%d size=%d\n",
 		regno, reg_type_str[reg->type], off, size);
+
 	return -EACCES;
 }
 
@@ -1791,8 +1792,14 @@ static bool is_ctx_reg(struct bpf_verifier_env *env, int regno)
 {
 	const struct bpf_reg_state *reg = reg_state(env, regno);
 
-	return reg->type == PTR_TO_CTX ||
-	       reg->type == PTR_TO_SOCKET;
+	return reg->type == PTR_TO_CTX;
+}
+
+static bool is_sk_reg(struct bpf_verifier_env *env, int regno)
+{
+	const struct bpf_reg_state *reg = reg_state(env, regno);
+
+	return type_is_sk_pointer(reg->type);
 }
 
 static bool is_sk_reg(struct bpf_verifier_env *env, int regno)
@@ -2211,9 +2218,10 @@ static int check_mem_access(struct bpf_verifier_env *env, int insn_idx, u32 regn
 		err = check_flow_keys_access(env, off, size);
 		if (!err && t == BPF_READ && value_regno >= 0)
 			mark_reg_unknown(env, regs, value_regno);
-	} else if (reg->type == PTR_TO_SOCKET) {
+	} else if (type_is_sk_pointer(reg->type)) {
 		if (t == BPF_WRITE) {
-			verbose(env, "cannot write into socket\n");
+			verbose(env, "R%d cannot write into %s\n",
+				regno, reg_type_str[reg->type]);
 			return -EACCES;
 		}
 		err = check_sock_access(env, insn_idx, regno, off, size, t);
@@ -2258,7 +2266,8 @@ static int check_xadd(struct bpf_verifier_env *env, int insn_idx, struct bpf_ins
 
 	if (is_ctx_reg(env, insn->dst_reg) ||
 	    is_pkt_reg(env, insn->dst_reg) ||
-	    is_flow_key_reg(env, insn->dst_reg)) {
+	    is_flow_key_reg(env, insn->dst_reg) ||
+	    is_sk_reg(env, insn->dst_reg)) {
 		verbose(env, "BPF_XADD stores into R%d %s is not allowed\n",
 			insn->dst_reg,
 			reg_type_str[reg_state(env, insn->dst_reg)->type]);
@@ -3388,13 +3397,11 @@ static int check_helper_call(struct bpf_verifier_env *env, int func_id, int insn
 			regs[BPF_REG_0].id = ++env->id_gen;
 		}
 	} else if (fn->ret_type == RET_PTR_TO_SOCKET_OR_NULL) {
-		int id = acquire_reference_state(env, insn_idx);
-		if (id < 0)
-			return id;
 		mark_reg_known_zero(env, regs, BPF_REG_0);
 		regs[BPF_REG_0].type = PTR_TO_SOCKET_OR_NULL;
 		if (is_acquire_function(func_id)) {
 			int id = acquire_reference_state(env, insn_idx);
+
 			if (id < 0)
 				return id;
 			/* For release_reference() */
@@ -5102,6 +5109,7 @@ static void mark_ptr_or_null_regs(struct bpf_verifier_state *vstate, u32 regno,
 
 	if (reg_is_refcounted_or_null(&regs[regno]) && is_null)
 		release_reference_state(state, id);
+
 	for (i = 0; i < MAX_BPF_REG; i++)
 		mark_ptr_or_null_reg(state, &regs[i], id, is_null);
 	for (j = 0; j <= vstate->curframe; j++) {

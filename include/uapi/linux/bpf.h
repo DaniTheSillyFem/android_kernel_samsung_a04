@@ -2609,6 +2609,9 @@ struct __sk_buff {
 	/* ... here. */
 
 	__u32 data_meta;
+	__u64 tstamp;
+	__u32 wire_len;
+	__u32 gso_segs;
 	__bpf_md_ptr(struct bpf_sock *, sk);
 };
 

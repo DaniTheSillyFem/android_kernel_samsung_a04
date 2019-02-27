@@ -1939,6 +1939,9 @@ static int bpf_prog_attach(const union bpf_attr *attr)
 	case BPF_FLOW_DISSECTOR:
 		ptype = BPF_PROG_TYPE_FLOW_DISSECTOR;
 		break;
+	case BPF_CGROUP_SYSCTL:
+		ptype = BPF_PROG_TYPE_CGROUP_SYSCTL;
+		break;
 	default:
 		return -EINVAL;
 	}

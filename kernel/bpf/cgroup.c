@@ -783,7 +783,6 @@ const struct bpf_verifier_ops cg_dev_verifier_ops = {
 	.is_valid_access	= cgroup_dev_is_valid_access,
 };
 
-
 /**
  * __cgroup_bpf_run_filter_sysctl - Run a program on sysctl
  *

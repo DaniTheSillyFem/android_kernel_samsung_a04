@@ -17,6 +17,8 @@ struct bpf_map;
 struct bpf_prog;
 struct bpf_sock_ops_kern;
 struct bpf_cgroup_storage;
+struct ctl_table;
+struct ctl_table_header;
 
 struct ctl_table;
 struct ctl_table_header;
@@ -118,6 +120,10 @@ int __cgroup_bpf_run_filter_sock_ops(struct sock *sk,
 
 int __cgroup_bpf_check_dev_permission(short dev_type, u32 major, u32 minor,
 				      short access, enum bpf_attach_type type);
+
+int __cgroup_bpf_run_filter_sysctl(struct ctl_table_header *head,
+				   struct ctl_table *table, int write,
+				   enum bpf_attach_type type);
 
 static inline enum bpf_cgroup_storage_type cgroup_storage_type(
 	struct bpf_map *map)
@@ -276,6 +282,17 @@ int bpf_percpu_cgroup_storage_update(struct bpf_map *map, void *key,
 									      \
 	__ret;								      \
 })
+
+
+#define BPF_CGROUP_RUN_PROG_SYSCTL(head, table, write)			       \
+({									       \
+	int __ret = 0;							       \
+	if (cgroup_bpf_enabled)						       \
+		__ret = __cgroup_bpf_run_filter_sysctl(head, table, write,     \
+						       BPF_CGROUP_SYSCTL);     \
+	__ret;								       \
+})
+
 int cgroup_bpf_prog_attach(const union bpf_attr *attr,
 			   enum bpf_prog_type ptype, struct bpf_prog *prog);
 int cgroup_bpf_prog_detach(const union bpf_attr *attr,

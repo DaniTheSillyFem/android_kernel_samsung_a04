@@ -7127,11 +7127,11 @@ static int replace_map_fd_with_map_ptr(struct bpf_verifier_env *env)
 					"unrecognized bpf_ld_imm64 insn\n");
 			}
 
-			f = fdget(insn->imm);
+			f = fdget(insn[0].imm);
 			map = __bpf_map_get(f);
 			if (IS_ERR(map)) {
 				verbose(env, "fd %d is not pointing to valid bpf_map\n",
-					insn->imm);
+					insn[0].imm);
 				return PTR_ERR(map);
 			}
 

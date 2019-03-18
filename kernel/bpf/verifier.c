@@ -2608,6 +2608,7 @@ static int int_ptr_type_to_size(enum bpf_arg_type type)
 		return sizeof(u32);
 	else if (type == ARG_PTR_TO_LONG)
 		return sizeof(u64);
+
 	return -EINVAL;
 }
 
@@ -2803,6 +2804,7 @@ static int check_func_arg(struct bpf_verifier_env *env, u32 regno,
 					      zero_size_allowed, meta);
 	} else if (arg_type_is_int_ptr(arg_type)) {
 		int size = int_ptr_type_to_size(arg_type);
+
 		err = check_helper_mem_access(env, regno, size, false, meta);
 		if (err)
 			return err;

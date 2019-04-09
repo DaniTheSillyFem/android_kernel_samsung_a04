@@ -5445,7 +5445,6 @@ static int check_ld_imm(struct bpf_verifier_env *env, struct bpf_insn *insn)
 
 	map = env->used_maps[aux->map_index];
 	mark_reg_known_zero(env, regs, insn->dst_reg);
-
 	regs[insn->dst_reg].map_ptr = map;
 
 	if (insn->src_reg == BPF_PSEUDO_MAP_VALUE) {
@@ -7185,6 +7184,7 @@ static int replace_map_fd_with_map_ptr(struct bpf_verifier_env *env)
 			     insn[1].imm != 0)) {
 				verbose(env,
 					"unrecognized bpf_ld_imm64 insn\n");
+				return -EINVAL;
 			}
 
 			f = fdget(insn[0].imm);
@@ -7202,7 +7202,6 @@ static int replace_map_fd_with_map_ptr(struct bpf_verifier_env *env)
 			}
 
 			aux = &env->insn_aux_data[i];
-
 			if (insn->src_reg == BPF_PSEUDO_MAP_FD) {
 				addr = (unsigned long)map;
 			} else {

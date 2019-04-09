@@ -52,6 +52,7 @@ bool btf_member_is_reg_int(const struct btf *btf, const struct btf_type *s,
 			   const struct btf_member *m,
 			   u32 expected_offset, u32 expected_size);
 int btf_find_spin_lock(const struct btf *btf, const struct btf_type *t);
+bool btf_type_is_void(const struct btf_type *t);
 
 int btf_find_spin_lock(const struct btf *btf, const struct btf_type *t);
 bool btf_name_offset_valid(const struct btf *btf, u32 offset);

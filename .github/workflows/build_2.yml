@@ -1,5 +1,4 @@
-name: Build Kernel & Direct boot.img Samsung Wingtech A04 (Non-GKI 4.19 - ReSukiSU)
-
+name: Build TouchDirt Kernel, ReSukiSU
 on:
   workflow_dispatch:
 
@@ -11,13 +10,13 @@ jobs:
     - name: Checkout source
       uses: actions/checkout@v4
 
-    - name: Clean Integration of ReSukiSU & Bypassing Manual Hook Check
+    - name: Integrating ReSukiSU
       run: |
         echo "[-] Cleaning up old remnants..."
         rm -rf KernelSU
         rm -rf drivers/kernelsu ReSukiSU .git/modules/ReSukiSU fs/ksu_compat.c
 
-        echo "[-] Cloning ReSukiSU repository (main branch)..."
+        echo "[-] Cloning ReSukiSU repo..."
         git clone -b main https://github.com/ReSukiSU/ReSukiSU.git ReSukiSU
 
         echo "[-] Neutralizing manual hook check to allow compilation..."
@@ -61,7 +60,7 @@ jobs:
         os.symlink(os.path.relpath(ksu_src, "drivers"), "drivers/kernelsu")
         '
 
-        echo "[-] Injecting compatibility layer into fs/ for LLD perfection..."
+        echo "[-] Injecting compatibility layer into fs/..."
         cat << 'EOF' > fs/ksu_compat.c
         #include <linux/module.h>
         #include <linux/types.h>
@@ -138,7 +137,7 @@ jobs:
     - name: Prepare Toolchains directories
       run: mkdir -p toolchain/gcc toolchain/clang
 
-    - name: Download GCC Toolchain
+    - name: Download GCC & Clang Toolchain
       run: |
         cd toolchain/gcc
         wget -q --show-progress --retry-connrefused --waitretry=2 --read-timeout=30 -t 5 \
@@ -147,8 +146,6 @@ jobs:
           https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz -O gcc.tar.xz
         tar -xf gcc.tar.xz -C ./
 
-    - name: Download Compatible Clang Toolchain
-      run: |
         cd toolchain/clang
         wget -q --show-progress \
           https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/clang-r383902.tar.gz -O clang.tar.gz
@@ -214,8 +211,8 @@ jobs:
 
         make -C $(pwd) O=$(pwd)/out -j$(nproc) || make -C $(pwd) O=$(pwd)/out -j1
 
-    - name: Upload boot.img Artifact
+    - name: Upload kernel Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: resukisu
+        name: touchdirt-resukisu
         path: out/arch/arm64/boot/Image

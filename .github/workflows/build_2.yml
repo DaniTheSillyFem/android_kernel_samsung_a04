@@ -4,11 +4,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout source
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7.0.1
 
     - name: Integrating ReSukiSU
       run: |
@@ -182,6 +182,7 @@ jobs:
         fi
 
         sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config || true
+        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-KSU-v1.0/' $(pwd)/out/.config || true
 
         cat << 'EOT' >> $(pwd)/out/.config
         CONFIG_IKHEADERS=n
@@ -211,8 +212,8 @@ jobs:
 
         make -C $(pwd) O=$(pwd)/out -j$(nproc) || make -C $(pwd) O=$(pwd)/out -j1
 
-    - name: Upload kernel Artifact
-      uses: actions/upload-artifact@v4
+    - name: Upload build outputs
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: touchdirt-resukisu
         path: out/arch/arm64/boot/Image

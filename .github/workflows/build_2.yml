@@ -135,7 +135,9 @@ jobs:
           device-tree-compiler libfdt-dev gcc-arm-linux-gnueabi cpio
 
     - name: Prepare Toolchains directories
-      run: mkdir -p toolchain/gcc toolchain/clang
+      run: |
+        mkdir -p toolchain/gcc
+        mkdir -p toolchain/clang
 
     - name: Download GCC & Clang Toolchain
       run: |

@@ -180,11 +180,13 @@ jobs:
         make -C $(pwd) O=$(pwd)/out rsuntk-a04_defconfig
 
         if [ -f "arch/arm64/configs/rsuntk.config" ]; then
-          python3 scripts/kconfig/merge_config.sh -O $(pwd)/out $(pwd)/out/.config arch/arm64/configs/rsuntk.config || true
+          ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/rsuntk.config
         fi
 
-        sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config || true
-        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-ReSukiSU-v1.0/' $(pwd)/out/.config || true
+        grep '^CONFIG_LOCALVERSION=' out/.config
+
+        sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config
+        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-ReSukiSU-v1.0/' $(pwd)/out/.config
 
         cat << 'EOT' >> $(pwd)/out/.config
         CONFIG_IKHEADERS=n

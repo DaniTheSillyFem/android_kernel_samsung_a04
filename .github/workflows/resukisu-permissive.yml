@@ -186,7 +186,7 @@ jobs:
         grep '^CONFIG_LOCALVERSION=' out/.config
 
         sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config
-        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-ReSukiSU-v1.0/' $(pwd)/out/.config
+        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-ReSukiSU-PERMISSIVE-v1.0/' $(pwd)/out/.config
 
         cat << 'EOT' >> $(pwd)/out/.config
         CONFIG_IKHEADERS=n
@@ -219,5 +219,5 @@ jobs:
     - name: Upload build outputs
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: touchdirt-resukisu
+        name: touchdirt-resukisu-permissive
         path: out/arch/arm64/boot/Image

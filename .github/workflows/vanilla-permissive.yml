@@ -85,6 +85,8 @@ jobs:
             ./scripts/kconfig/merge_config.sh "$(pwd)/.config" arch/arm64/configs/touchdirt-permissive.config
           fi
 
+          sed -i 's/-TouchDirt-v1\.0/-TouchDirt-PERMISSIVE-v1.0/' $(pwd)/out/.config
+
           make ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang olddefconfig
 
           make -j$(nproc) \
@@ -96,6 +98,6 @@ jobs:
       - name: Upload build outputs
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: touchdirt-vanilla
+          name: touchdirt-vanilla-permissive
           path: |
             arch/arm64/boot/Image

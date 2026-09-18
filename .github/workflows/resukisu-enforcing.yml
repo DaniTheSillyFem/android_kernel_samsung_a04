@@ -216,8 +216,26 @@ jobs:
 
         make -C $(pwd) O=$(pwd)/out -j$(nproc) || make -C $(pwd) O=$(pwd)/out -j1
 
-    - name: Upload build outputs
-      uses: actions/upload-artifact@v7.0.1
+    - name: Get kernel version
+      id: version
+      run: |
+        VERSION=$(grep '^CONFIG_LOCALVERSION=' out/.config | sed -n 's/.*-v\([0-9][0-9.]*\)".*/v\1/p')
+        echo "VERSION=$VERSION"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Package AnyKernel3
+      run: |
+        DATE=$(date -u +"%Y-%m-%d")
+
+        git clone https://github.com/DaniTheSillyFem/AnyKernel3 --depth 1
+
+        cp out/arch/arm64/boot/Image AnyKernel3/Image
+
+        cd AnyKernel3
+        zip -r9 "../TouchDirt-ReSukiSU-${{ steps.version.outputs.version }}-${DATE}.zip" . -x ".git/*"
+
+    - name: Upload AnyKernel3 ZIP
+      uses: actions/upload-artifact@v4
       with:
-        name: touchdirt-resukisu
-        path: out/arch/arm64/boot/Image
+        name: TouchDirt
+        path: TouchDirt-*.zip

@@ -75,21 +75,21 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
 
-          make ARCH=arm64 \
+          make -C $(pwd) O=$(pwd)/out ARCH=arm64 \
             LLVM=1 \
             LLVM_IAS=1 \
             CC=clang \
             touchdirt-a04_defconfig
 
           if [ -f "arch/arm64/configs/touchdirt.config" ]; then
-            ./scripts/kconfig/merge_config.sh "$(pwd)/.config" arch/arm64/configs/touchdirt-permissive.config
+            ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/touchdirt-permissive.config
           fi
 
           sed -i 's/-TouchDirt-v1\.0/-TouchDirt-PERMISSIVE-v1.0/' $(pwd)/out/.config
 
-          make ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang olddefconfig
+          make -C $(pwd) O=$(pwd)/out ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang olddefconfig
 
-          make -j$(nproc) \
+          make -C $(pwd) O=$(pwd)/out -j$(nproc) \
             ARCH=arm64 \
             LLVM=1 \
             LLVM_IAS=1 \

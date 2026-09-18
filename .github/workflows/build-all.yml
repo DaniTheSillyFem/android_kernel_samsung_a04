@@ -1,0 +1,21 @@
+name: TouchDirt - Build All
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vanilla-enforcing:
+    name: Vanilla - Enforcing
+    uses: ./.github/workflows/vanilla-enforcing.yml
+
+  vanilla-permissive:
+    name: Vanilla - Permissive
+    uses: ./.github/workflows/vanilla-permissive.yml
+
+  resukisu-enforcing:
+    name: ReSukiSU - Enforcing
+    uses: ./.github/workflows/resukisu-enforcing.yml
+
+  resukisu-permissive:
+    name: ReSukiSU - Permissive
+    uses: ./.github/workflows/resukisu-permissive.yml

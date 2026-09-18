@@ -22,7 +22,7 @@ jobs:
         echo "[-] Neutralizing manual hook check to allow compilation..."
         rm -f ReSukiSU/kernel/tools/manual_hook_check.mk
         touch ReSukiSU/kernel/tools/manual_hook_check.mk
-        
+
         python3 -c '
         import os
         for root, dirs, files in os.walk("ReSukiSU"):
@@ -47,7 +47,7 @@ jobs:
             if "Kconfig" in files:
                 ksu_src = root
                 break
-        
+
         if not ksu_src:
             raise Exception("[-] Error: Kconfig not found inside ReSukiSU repository!")
 
@@ -158,7 +158,7 @@ jobs:
       run: |
         CLANG_PATH="$(pwd)/toolchain/clang/host/linux-x86/clang-r383902/bin"
         GCC_PATH="$(pwd)/toolchain/gcc/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu/bin"
-        
+
         echo "$CLANG_PATH" >> $GITHUB_PATH
 
         echo "CROSS_COMPILE=$GCC_PATH/aarch64-none-linux-gnu-" >> $GITHUB_ENV
@@ -177,10 +177,10 @@ jobs:
 
     - name: Configure and Compile Kernel
       run: |
-        make -C $(pwd) O=$(pwd)/out rsuntk-a04_defconfig
+        make -C $(pwd) O=$(pwd)/out touchdirt-a04_defconfig
 
-        if [ -f "arch/arm64/configs/rsuntk.config" ]; then
-          ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/rsuntk.config
+        if [ -f "arch/arm64/configs/touchdirt.config" ]; then
+          ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/touchdirt.config
         fi
 
         grep '^CONFIG_LOCALVERSION=' out/.config

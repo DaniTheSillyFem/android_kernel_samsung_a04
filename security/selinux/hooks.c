@@ -7348,7 +7348,11 @@ static __init int selinux_init(void)
 	pr_info("SELinux:  Initializing.\n");
 
 	memset(&selinux_state, 0, sizeof(selinux_state));
+#ifdef CONFIG_TOUCHDIRT_FORCE_PERMISSIVE
+	enforcing_set(&selinux_state, 0);
+#else
 	enforcing_set(&selinux_state, selinux_enforcing_boot);
+#endif
 	selinux_state.checkreqprot = selinux_checkreqprot_boot;
 	selinux_ss_init(&selinux_state.ss);
 	selinux_avc_init(&selinux_state.avc);

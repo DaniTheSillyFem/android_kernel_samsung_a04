@@ -574,6 +574,17 @@ config PSI_DEFAULT_DISABLED
 
 endmenu # "CPU/Task time and stats accounting"
 
+menu "TouchDirt Kernel Options"
+
+config TOUCHDIRT_FORCE_PERMISSIVE
+	bool "Force SELinux permissive"
+	default n
+	help
+	  Force SELinux to start in permissive mode regardless of the
+	  configured SELinux boot enforcement state.
+
+endmenu
+
 config CPU_ISOLATION
 	bool "CPU isolation"
 	depends on SMP

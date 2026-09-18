@@ -1,0 +1,101 @@
+name: Build TouchDirt Kernel, Vanilla, Permissive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7.0.1
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            bc \
+            bison \
+            build-essential \
+            ccache \
+            cpio \
+            curl \
+            flex \
+            git \
+            libelf-dev \
+            libssl-dev \
+            lld \
+            python3 \
+            unzip \
+            xz-utils \
+            zip
+
+      - name: Download GCC & Clang Toolchain
+        run: |
+          mkdir -p toolchain/gcc toolchain/clang
+          cd toolchain/gcc
+          wget -q --show-progress --retry-connrefused --waitretry=2 --read-timeout=30 -t 5 \
+            https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz -O gcc.tar.xz || \
+          wget -q --show-progress \
+            https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu.tar.xz -O gcc.tar.xz
+          tar -xf gcc.tar.xz -C ./
+
+          cd toolchain/clang
+          wget -q --show-progress \
+            https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchains/clang-r383902.tar.gz -O clang.tar.gz
+          mkdir -p host/linux-x86/clang-r383902
+          tar -xzf clang.tar.gz -C host/linux-x86/clang-r383902
+
+      - name: Set environment
+        run: |
+          CLANG_PATH="$(pwd)/toolchain/clang/host/linux-x86/clang-r383902/bin"
+          GCC_PATH="$(pwd)/toolchain/gcc/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64-none-linux-gnu/bin"
+
+          echo "$CLANG_PATH" >> $GITHUB_PATH
+          echo "CROSS_COMPILE=$GCC_PATH/aarch64-none-linux-gnu-" >> $GITHUB_ENV
+          echo "CROSS_COMPILE_ARM32=arm-linux-gnueabi-" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "LD=ld.lld" >> $GITHUB_ENV
+          echo "AR=llvm-ar" >> $GITHUB_ENV
+          echo "NM=llvm-nm" >> $GITHUB_ENV
+          echo "OBJCOPY=llvm-objcopy" >> $GITHUB_ENV
+          echo "OBJDUMP=llvm-objdump" >> $GITHUB_ENV
+          echo "STRIP=llvm-strip" >> $GITHUB_ENV
+          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
+          echo "ARCH=arm64" >> $GITHUB_ENV
+          echo "KCFLAGS=-w -I$(pwd)/out/security/selinux -I$(pwd)/security/selinux/include -I$(pwd)/security/selinux/ss -I$(pwd)/out/security/selinux/ss" >> $GITHUB_ENV
+          echo "CONFIG_SECTION_MISMATCH_WARN_ONLY=y" >> $GITHUB_ENV
+
+      - name: Build kernel
+        run: |
+          export ARCH=arm64
+          export SUBARCH=arm64
+
+          make ARCH=arm64 \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            CC=clang \
+            touchdirt-a04_defconfig
+
+          if [ -f "arch/arm64/configs/touchdirt.config" ]; then
+            ./scripts/kconfig/merge_config.sh "$(pwd)/.config" arch/arm64/configs/touchdirt-permissive.config
+          fi
+
+          make ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang olddefconfig
+
+          make -j$(nproc) \
+            ARCH=arm64 \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            CC=clang
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: touchdirt-vanilla
+          path: |
+            arch/arm64/boot/Image

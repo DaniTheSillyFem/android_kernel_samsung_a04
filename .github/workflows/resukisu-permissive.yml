@@ -1,4 +1,4 @@
-name: Build TouchDirt Kernel, ReSukiSU, Enforcing
+name: Build TouchDirt Kernel, ReSukiSU, Permissive
 on:
   workflow_dispatch:
 
@@ -180,7 +180,7 @@ jobs:
         make -C $(pwd) O=$(pwd)/out touchdirt-a04_defconfig
 
         if [ -f "arch/arm64/configs/touchdirt.config" ]; then
-          ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/touchdirt.config
+          ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/touchdirt-permissive.config
         fi
 
         grep '^CONFIG_LOCALVERSION=' out/.config

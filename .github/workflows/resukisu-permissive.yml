@@ -1,7 +1,7 @@
 name: Build TouchDirt Kernel, ReSukiSU, Permissive
 on:
   workflow_dispatch:
-  workflow_call: 
+  workflow_call:
 
 jobs:
   build:
@@ -236,7 +236,7 @@ jobs:
         zip -r9 "../TouchDirt-ReSukiSU-${{ steps.version.outputs.version }}-${DATE}-Permissive.zip" . -x ".git/*"
 
     - name: Upload AnyKernel3 ZIP
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7.0.1
       with:
         name: TouchDirt-ReSukiSU-Permissive
         path: TouchDirt-*.zip

@@ -447,11 +447,11 @@ KBUILD_AFLAGS   := -D__ASSEMBLY__ -fno-PIE
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE \
 		   -Werror-implicit-function-declaration \
-		   -Werror=return-type -Wno-format-security -Wno-default-const-init-var-unsafe \
-		   -Wno-int-conversion -Wno-default-const-init-field-unsafe \
+		   -Werror=return-type -Wno-format-security \
+		   -Wno-int-conversion \
 		   -Wno-gcc-compat -Wno-unused-function -Wno-format-extra-args \
-		   -Wno-gnu-variable-sized-type-not-at-end -Wno-error=unused-but-set-variable \
-		   -Wno-initializer-overrides -Wno-unused-but-set-variable -std=gnu89
+		   -Wno-gnu-variable-sized-type-not-at-end \
+		   -Wno-initializer-overrides -std=gnu89
 KBUILD_CPPFLAGS := -D__KERNEL__
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=

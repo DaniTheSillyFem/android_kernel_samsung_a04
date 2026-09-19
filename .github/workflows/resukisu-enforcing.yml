@@ -44,7 +44,7 @@ jobs:
         python3 -c '
         import os, shutil
         ksu_src = None
-        for root, dirs, files in os.walk("ReSukiSU"):
+        for root, dirs, files in os.walk("KernelSU"):
             if "Kconfig" in files:
                 ksu_src = root
                 break

@@ -19,3 +19,46 @@ jobs:
   resukisu-permissive:
     name: ReSukiSU - Permissive
     uses: ./.github/workflows/resukisu-permissive.yml
+
+  release:
+    name: Publish Release
+    needs:
+      - vanilla-enforcing
+      - vanilla-permissive
+      - resukisu-enforcing
+      - resukisu-permissive
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: List release assets
+        run: |
+          find release-assets -type f -print
+
+      - name: Get release version
+        id: version
+        run: |
+          FILE=$(find release-assets -type f -name '*.zip' | head -n 1)
+          VERSION=$(basename "$FILE" | sed -n 's/^TouchDirt-[^-]*-\(v[0-9.]*\)-.*/\1/p')
+
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          gh release create "$VERSION" \
+            release-assets/*/*.zip \
+            --title "TouchDirt $VERSION" \
+            --notes-file .github/release-notes/v1.0.md

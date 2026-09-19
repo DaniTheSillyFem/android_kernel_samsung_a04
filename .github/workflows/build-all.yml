@@ -64,4 +64,4 @@ jobs:
           gh release create "$VERSION" \
             release-assets/*/*.zip \
             --title "TouchDirt $VERSION" \
-            --notes-file .github/release-notes/v1.0.md
+            --notes-file .github/release-notes/${VERSION}.md

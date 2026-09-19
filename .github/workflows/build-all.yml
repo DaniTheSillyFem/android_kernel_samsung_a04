@@ -61,7 +61,9 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
+          gh release delete "$VERSION" --yes --cleanup-tag 2>/dev/null || true
+
           gh release create "$VERSION" \
             release-assets/*/*.zip \
             --title "TouchDirt $VERSION" \
-            --notes-file .github/release-notes/${VERSION}.md
+            --notes-file ".github/release-notes/${VERSION}.md"

@@ -2,6 +2,10 @@ name: Build TouchDirt Kernel, ReSukiSU, Enforcing
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -187,7 +191,7 @@ jobs:
         grep '^CONFIG_LOCALVERSION=' out/.config
 
         sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config
-        sed -i 's/-TouchDirt-v1\.0/-TouchDirt-ReSukiSU-v1.0.1/' $(pwd)/out/.config
+        sed -i "s/-TouchDirt-v[0-9.]*$/-TouchDirt-ReSukiSU-${{ inputs.version }}/" out/.config
 
         cat << 'EOT' >> $(pwd)/out/.config
         CONFIG_IKHEADERS=n

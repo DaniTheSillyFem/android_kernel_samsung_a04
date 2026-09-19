@@ -2,23 +2,37 @@ name: TouchDirt - Build All
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "TouchDirt version"
+        required: true
+        type: string
+        default: "v1.0.1"
 
 jobs:
   vanilla-enforcing:
     name: Vanilla - Enforcing
     uses: ./.github/workflows/vanilla-enforcing.yml
+    with:
+      version: ${{ inputs.version }}
 
   vanilla-permissive:
     name: Vanilla - Permissive
     uses: ./.github/workflows/vanilla-permissive.yml
+    with:
+      version: ${{ inputs.version }}
 
   resukisu-enforcing:
     name: ReSukiSU - Enforcing
     uses: ./.github/workflows/resukisu-enforcing.yml
+    with:
+      version: ${{ inputs.version }}
 
   resukisu-permissive:
     name: ReSukiSU - Permissive
     uses: ./.github/workflows/resukisu-permissive.yml
+    with:
+      version: ${{ inputs.version }}
 
   release:
     name: Publish Release

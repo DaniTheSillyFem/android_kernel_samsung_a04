@@ -3,6 +3,10 @@ name: Build TouchDirt Kernel, Vanilla, Permissive
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -86,7 +90,7 @@ jobs:
             ./scripts/kconfig/merge_config.sh -O "$(pwd)/out" "$(pwd)/out/.config" arch/arm64/configs/touchdirt-permissive.config
           fi
 
-          sed -i 's/-TouchDirt-v1\.0/-TouchDirt-PERMISSIVE-v1.0.1/' $(pwd)/out/.config
+          sed -i "s/-TouchDirt-v[0-9.]*$/-TouchDirt-PERMISSIVE-${{ inputs.version }}/" out/.config
 
           make -C $(pwd) O=$(pwd)/out ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang olddefconfig
 

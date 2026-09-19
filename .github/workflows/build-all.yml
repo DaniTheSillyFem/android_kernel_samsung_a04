@@ -67,3 +67,9 @@ jobs:
             release-assets/*/*.zip \
             --title "TouchDirt $VERSION" \
             --notes-file ".github/release-notes/${VERSION}.md"
+
+  resukisu-manager:
+    name: ReSukiSU Manager
+    needs:
+      - release
+    uses: ./.github/workflows/update-resukisu-manager.yml

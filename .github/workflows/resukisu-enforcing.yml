@@ -18,7 +18,7 @@ jobs:
         rm -rf drivers/kernelsu ReSukiSU .git/modules/ReSukiSU fs/ksu_compat.c
 
         echo "[-] Cloning ReSukiSU repo..."
-        git clone -b main https://github.com/ReSukiSU/ReSukiSU.git ReSukiSU
+        git clone -b main https://github.com/ReSukiSU/ReSukiSU.git KernelSU
 
         echo "[-] Neutralizing manual hook check to allow compilation..."
         rm -f ReSukiSU/kernel/tools/manual_hook_check.mk

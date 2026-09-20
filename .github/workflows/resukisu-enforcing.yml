@@ -94,26 +94,6 @@ jobs:
         sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config
         sed -i "s/-TouchDirt-v[0-9.]*$/-TouchDirt-ReSukiSU-${{ inputs.version }}/" out/.config
 
-        cat << 'EOT' >> $(pwd)/out/.config
-        CONFIG_IKHEADERS=n
-        CONFIG_KSU=y
-        CONFIG_KPROBES=y
-        CONFIG_KPROBE_EVENTS=y
-        CONFIG_HAVE_KPROBES=y
-        CONFIG_KSU_KPROBE_HOOKS=y
-        CONFIG_KALLSYMS=y
-        CONFIG_KALLSYMS_ALL=y
-        CONFIG_SECURITY_SELINUX=y
-        CONFIG_SECURITY_SELINUX_DISABLE=y
-        CONFIG_SECURITY_SELINUX_DEVELOP=y
-        CONFIG_LTO=n
-        CONFIG_LTO_CLANG=n
-        CONFIG_THINLTO=n
-        CONFIG_KPM=n
-        CONFIG_KSU_SUSFS=n
-        CONFIG_KSU_MANUAL_HOOK=y
-        EOT
-
         make -C $(pwd) O=$(pwd)/out olddefconfig
 
         make -C $(pwd) O=$(pwd)/out prepare

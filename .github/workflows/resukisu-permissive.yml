@@ -17,31 +17,14 @@ jobs:
 
     - name: Integrating ReSukiSU
       run: |
-        echo "[-] Cleaning up old remnants..."
-        rm -rf KernelSU
-
         echo "[-] Cloning ReSukiSU repo..."
         git clone -b main https://github.com/ReSukiSU/ReSukiSU.git KernelSU
 
-        echo "[-] Neutralizing manual hook check to allow compilation..."
-        rm -f KernelSU/kernel/tools/manual_hook_check.mk
-        touch KernelSU/kernel/tools/manual_hook_check.mk
-
-        python3 -c '
-        import os
-        for root, dirs, files in os.walk("KernelSU"):
-            for f in files:
-                if f.endswith(".mk") or f == "Makefile":
-                    fp = os.path.join(root, f)
-                    try:
-                        with open(fp, "r", errors="ignore") as fh: content = fh.read()
-                        if "manual_hook_check" in content:
-                            content = content.replace("include", "# include")
-                            content = content.replace("manual_hook_check", "# manual_hook_check")
-                            with open(fp, "w") as fh: fh.write(content)
-                    except:
-                        pass
-        '
+        echo "[-] Setup ReSukiSU..."
+        chmod +x ./KernelSU/kernel/setup.sh
+        ./KernelSU/kernel/setup.sh
+        rm -rf KernelSU
+        git clone -b main https://github.com/ReSukiSU/ReSukiSU.git KernelSU
 
     - name: Install build dependencies
       run: |

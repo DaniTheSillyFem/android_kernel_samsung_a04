@@ -92,7 +92,7 @@ jobs:
         grep '^CONFIG_LOCALVERSION=' out/.config
 
         sed -i 's/CONFIG_IKHEADERS=y/CONFIG_IKHEADERS=n/g' $(pwd)/out/.config
-        sed -i "s/-TouchDirt-v[0-9.]*$/-TouchDirt-ReSukiSU-PERMISSIVE-${{ inputs.version }}/" out/.config
+        sed -i "s/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=\"-TouchDirt-ReSukiSU-PERMISSIVE-${{ inputs.version }}\"/" out/.config
 
         make -C $(pwd) O=$(pwd)/out olddefconfig
 
@@ -105,7 +105,7 @@ jobs:
     - name: Get kernel version
       id: version
       run: |
-        VERSION=$(grep '^CONFIG_LOCALVERSION=' out/.config | sed -n 's/.*-v\([0-9][0-9.]*\)".*/v\1/p')
+        VERSION="${{ inputs.version }}"
         echo "VERSION=$VERSION"
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 

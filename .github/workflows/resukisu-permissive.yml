@@ -19,7 +19,6 @@ jobs:
       run: |
         echo "[-] Cleaning up old remnants..."
         rm -rf KernelSU
-        rm -rf drivers/kernelsu ReSukiSU .git/modules/ReSukiSU fs/ksu_compat.c
 
         echo "[-] Cloning ReSukiSU repo..."
         git clone -b main https://github.com/ReSukiSU/ReSukiSU.git KernelSU

@@ -134,3 +134,4 @@ all.config
 
 # Build dir
 /out
+KernelSU/

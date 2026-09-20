@@ -30,7 +30,7 @@ jobs:
       run: |
         git clone https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd --depth 1 SUSFS
         chmod +x ./SUSFS/Patches/susfs/susfs_inline_hook_patches.sh
-        ./SUSFS/Patches/susfs/susfs_inline_hook_patches.sh
+        ./SUSFS/Patches/susfs_inline_hook_patches.sh
 
     - name: Install build dependencies
       run: |

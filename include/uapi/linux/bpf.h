@@ -193,7 +193,6 @@ enum bpf_attach_type {
 	BPF_LIRC_MODE2,
 	BPF_FLOW_DISSECTOR = 17,
 	BPF_CGROUP_SYSCTL = 18,
-	BPF_FLOW_DISSECTOR,
 	BPF_CGROUP_UDP4_RECVMSG = 19,
 	BPF_CGROUP_UDP6_RECVMSG = 20,
 	BPF_CGROUP_GETSOCKOPT = 21,
@@ -3332,11 +3331,6 @@ struct bpf_sockopt {
 	__s32	optname;
 	__s32	optlen;
 	__s32	retval;
-};
-
-struct bpf_func_info {
-	__u32	insn_off;
-	__u32	type_id;
 };
 
 #define BPF_LINE_INFO_LINE_NUM(line_col)	((line_col) >> 10)

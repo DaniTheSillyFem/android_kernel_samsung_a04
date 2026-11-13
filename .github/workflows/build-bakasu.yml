@@ -145,4 +145,7 @@ jobs:
     name: BakaSU Manager
     needs:
       - release
+      - resolve-bakasu
     uses: ./.github/workflows/update-bakasu-manager.yml
+    with:
+      bakasu_sha: ${{ needs.resolve-bakasu.outputs.sha }}

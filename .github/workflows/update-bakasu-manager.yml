@@ -3,6 +3,10 @@ name: Sync BakaSU Manager
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      bakasu_sha:
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -17,9 +21,12 @@ jobs:
       - name: Get latest BakaSU main commit
         id: resukisu
         run: |
-          SHA=$(git ls-remote \
-            https://github.com/Baka-SU/BakaSU.git \
-            refs/heads/main | awk '{print $1}')
+          SHA="${{ inputs.bakasu_sha }}"
+          if [ -z "$SHA" ]; then
+            SHA=$(git ls-remote \
+              https://github.com/Baka-SU/BakaSU.git \
+              refs/heads/main | awk '{print $1}')
+          fi
 
           echo "BakaSU main: $SHA"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"

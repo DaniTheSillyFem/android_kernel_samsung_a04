@@ -1,4 +1,4 @@
-name: TouchDirt - Build ReSukiSU
+name: TouchDirt - Build BakaSU
 
 on:
   workflow_dispatch:
@@ -14,23 +14,23 @@ permissions:
   actions: read
 
 jobs:
-  resukisu-enforcing:
-    name: ReSukiSU - Enforcing
-    uses: ./.github/workflows/resukisu-enforcing.yml
+  bakasu-enforcing:
+    name: BakaSU - Enforcing
+    uses: ./.github/workflows/bakasu-enforcing.yml
     with:
       version: ${{ inputs.version }}
 
-  resukisu-permissive:
-    name: ReSukiSU - Permissive
-    uses: ./.github/workflows/resukisu-permissive.yml
+  bakasu-permissive:
+    name: BakaSU - Permissive
+    uses: ./.github/workflows/bakasu-permissive.yml
     with:
       version: ${{ inputs.version }}
 
   release:
     name: Publish Release
     needs:
-      - resukisu-enforcing
-      - resukisu-permissive
+      - bakasu-enforcing
+      - bakasu-permissive
 
     runs-on: ubuntu-latest
 
@@ -72,8 +72,8 @@ jobs:
             --title "TouchDirt $VERSION" \
             --notes-file ".github/release-notes/${VERSION}.md"
 
-  resukisu-manager:
-    name: ReSukiSU Manager
+  bakasu-manager:
+    name: BakaSU Manager
     needs:
       - release
-    uses: ./.github/workflows/update-resukisu-manager.yml
+    uses: ./.github/workflows/update-bakasu-manager.yml

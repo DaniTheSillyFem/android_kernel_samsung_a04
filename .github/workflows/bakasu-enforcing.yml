@@ -1,9 +1,11 @@
 name: Build TouchDirt Kernel, BakaSU, Enforcing
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       version:
+        required: true
+        type: string
+      bakasu_sha:
         required: true
         type: string
 
@@ -12,19 +14,25 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    - name: Checkout source
+    - name: Checkout frozen kernel source
       uses: actions/checkout@v7.0.1
+      with:
+        ref: v1.0.3
 
-    - name: Integrating BakaSU
+    - name: Integrating pinned BakaSU revision
+      env:
+        BAKASU_SHA: ${{ inputs.bakasu_sha }}
       run: |
-        echo "[-] Cloning BakaSU repo..."
-        git clone -b main https://github.com/Baka-SU/BakaSU.git KernelSU
+        echo "[-] Cloning BakaSU repo at $BAKASU_SHA..."
+        git clone https://github.com/Baka-SU/BakaSU.git KernelSU
+        git -C KernelSU checkout "$BAKASU_SHA"
 
         echo "[-] Setup BakaSU..."
         chmod +x ./KernelSU/kernel/setup.sh
         ./KernelSU/kernel/setup.sh
         rm -rf KernelSU
-        git clone -b main https://github.com/Baka-SU/BakaSU.git KernelSU
+        git clone https://github.com/Baka-SU/BakaSU.git KernelSU
+        git -C KernelSU checkout "$BAKASU_SHA"
 
     - name: SUSFS
       run: |
